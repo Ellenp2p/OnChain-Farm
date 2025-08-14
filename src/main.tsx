@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { App } from './pages/App';
 import { FriendsList } from './pages/FriendsList';
+import { Settings } from './pages/Settings';
 import { FriendFarm } from './pages/FriendFarm';
 import './styles/index.css';
 
@@ -14,7 +15,8 @@ if (!rootElement) {
 const router = createBrowserRouter([
   { path: '/', element: <App /> },
   { path: '/friends', element: <FriendsList /> },
-  { path: '/friend/:id', element: <FriendFarm /> }
+  { path: '/friend/:id', element: <FriendFarm /> },
+  { path: '/settings', element: <Settings /> }
 ]);
 
 createRoot(rootElement).render(

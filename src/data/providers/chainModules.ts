@@ -1,10 +1,13 @@
 import type { FieldProvider } from '@/data/modules/field';
 import type { MarketProvider } from '@/data/modules/market';
 import type { FriendsProvider } from '@/data/modules/friends';
+import { getChainConfig } from '@/data/providers/chainConfig';
 
 export const chainFieldProvider: FieldProvider = {
   async loadField() {
     // TODO: 从链上读取地块网格状态
+    const cfg = getChainConfig();
+    void cfg; // 预留使用
     return { plots: [] };
   },
   async plant(plotId, cropTypeId) {

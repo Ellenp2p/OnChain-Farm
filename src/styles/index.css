@@ -43,6 +43,18 @@ body {
   padding: 12px;
 }
 
+/* Enlarged panel for forms */
+.panel-xl { width: min(1200px, calc(100% - 48px)); margin: 24px auto; padding: 24px; }
+
+/* Form styles */
+.form-grid { display: grid; gap: 16px; }
+.title-xl { font-size: 24px; margin: 0 0 12px 0; }
+.label-muted { font-size: 13px; color: #9ca3af; margin-bottom: 6px; }
+.input { width: 100%; padding: 10px 12px; background: #0b1220; border: 1px solid var(--grid); border-radius: 6px; color: var(--text); font-size: 14px; }
+.input:focus { outline: 2px solid var(--accent); border-color: var(--accent-2); }
+.input-lg { padding: 12px 14px; font-size: 16px; }
+.btn-lg { padding: 10px 14px; font-size: 14px; }
+
 .field {
   display: grid;
   grid-template-columns: repeat(8, 64px);

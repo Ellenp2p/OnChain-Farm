@@ -19,6 +19,7 @@ export function App() {
         <span className="muted">Alpha</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <Link className="btn" to="/friends">好友列表</Link>
+          <Link className="btn" to="/settings">设置</Link>
           <div>💰 {gold}</div>
         </div>
       </div>
