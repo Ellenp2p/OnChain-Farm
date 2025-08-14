@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { produce } from 'immer';
 import { CROPS } from '@/domain/crops';
 import { GameStateSnapshot, PlotTile, ToolKind } from '@/domain/types';
 import { providers } from '@/data/registry';
+import { cacheGetEntry } from '@/data/providers/simpleCache';
 
 export interface GameStoreState extends GameStateSnapshot {
   selectedTool: ToolKind;
@@ -28,6 +29,26 @@ function isGrown(plantedAt: number, cropTypeId: string) {
   return elapsed >= crop.growthSeconds * 1000;
 }
 
+const replacer = (key: any, value: any) => {
+  if (typeof value === 'bigint') {
+    return value.toString() + 'n';
+  }
+  return value;
+};
+
+const reviver = (key: any, value: any) => {
+  if (typeof value === 'string' && /^\d+n$/.test(value)) {
+    return BigInt(value.slice(0, -1));
+  }
+  return value;
+};
+
+// 创建自定义的 storage
+const customStorage = createJSONStorage(() => localStorage, {
+  replacer,
+  reviver,
+});
+
 export const useGameStore = create<GameStoreState & GameStoreActions>()(
   persist(
     (set, get) => ({
@@ -42,14 +63,11 @@ export const useGameStore = create<GameStoreState & GameStoreActions>()(
         // 从模块化 Provider 汇总初始状态
         const field = await providers.field.loadField();
         set(state => ({ ...state, plots: field.plots }));
-        // 保留本地金币与背包：若需要，也可改为从 market/provider 读取
-        const stored = localStorage.getItem('farm_aptos_mock_state_v2_modules');
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored) as GameStateSnapshot;
-            set({ gold: parsed.gold, inventory: parsed.inventory });
-          } catch {}
-        }
+        // Try to read on-chain gold cached by the field provider
+        try {
+          const g = cacheGetEntry<number>('field:gold');
+          if (g && (typeof g.value === 'number' || typeof g.value === 'bigint')) set(state=> ({...state, gold: g.value }));
+        } catch {}
       },
       async save() {
         const { gold, plots, inventory } = get();
@@ -115,18 +133,12 @@ export const useGameStore = create<GameStoreState & GameStoreActions>()(
       },
       async buySeed(cropTypeId, quantity) {
         const res = await providers.market.buySeed(cropTypeId, quantity);
-        set(
-          produce((draft: GameStoreState) => {
-            draft.gold += res.goldDelta;
-            if (res.inventory) draft.inventory = res.inventory;
-          })
-        );
       },
       heartbeat() {
         set({ tick: Date.now() });
       }
     }),
-    { name: 'farm_aptos_zustand_cache' }
+    { name: 'farm_aptos_zustand_cache', storage: customStorage}
   )
 );
 

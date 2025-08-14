@@ -1,17 +1,28 @@
 import { CROPS } from './crops';
 import { InventoryItem, PlotTile, ToolKind } from './types';
 
-export function isGrown(plantedAt: number, cropTypeId: string): boolean {
+export function isGrown(plantedAt: bigint, cropTypeId: string): boolean {
   const crop = CROPS[cropTypeId];
-  const elapsed = Date.now() - plantedAt;
-  return elapsed >= crop.growthSeconds * 1000;
+  const elapsed = BigInt(Date.now()) - plantedAt;
+  return elapsed >= BigInt(crop.growthSeconds) * 1000n;
 }
 
-export function growthProgress(plantedAt: number, cropTypeId: string): number {
+export function growthProgress(plantedAt: bigint, cropTypeId: string): number {
   const crop = CROPS[cropTypeId];
-  const elapsed = Date.now() - plantedAt;
-  const pct = Math.min(1, elapsed / (crop.growthSeconds * 1000));
-  return pct;
+  const elapsed = BigInt(Date.now()) - plantedAt;
+  // Compute progress using BigInt fixed-point scaling to avoid converting
+  // very large BigInt values to Number (which would lose precision).
+  // SCALE determines fractional precision (micro = 1_000_000 -> 6 decimal places).
+  const needed = BigInt(crop.growthSeconds) * 1000n;
+  if (needed <= 0n) return 0;
+  if (elapsed <= 0n) return 0;
+
+  const SCALE = 1_000_000n;
+  const scaled = (elapsed * SCALE) / needed; // BigInt division -> integer fixed-point
+  if (scaled <= 0n) return 0;
+  if (scaled >= SCALE) return 1;
+  // scaled < SCALE so it's safe to convert to Number without precision loss
+  return Number(scaled) / Number(SCALE);
 }
 
 export type PlotAssessment = {

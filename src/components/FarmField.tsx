@@ -86,8 +86,14 @@ function PlotDetails() {
   const c = crop ? CROPS[crop.cropTypeId] : undefined;
   const pct = crop ? Math.floor(growthProgress(crop.plantedAt, crop.cropTypeId) * 100) : 0;
   const ready = crop ? isGrown(crop.plantedAt, crop.cropTypeId) : false;
-  const leftMs = crop ? Math.max(0, c!.growthSeconds * 1000 - (Date.now() - crop.plantedAt)) : 0;
-  const leftSec = Math.ceil(leftMs / 1000);
+  let leftSec = 0;
+  if (crop) {
+    const needed = c!.growthSeconds * 1000;
+    const left = BigInt(needed) - (BigInt(Date.now()) - crop.plantedAt);
+    const leftMs = left > 0n ? left : 0n;
+    // safe to convert because leftMs is bounded by needed which is a small number
+    leftSec = Math.ceil(Number(leftMs) / 1000);
+  }
 
   return (
     <div className="panel" style={{ marginTop: 12 }}>

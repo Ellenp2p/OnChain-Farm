@@ -2,12 +2,12 @@ import type { FieldProvider } from '@/data/modules/field';
 import type { MarketProvider } from '@/data/modules/market';
 import type { FriendsProvider } from '@/data/modules/friends';
 import { getChainConfig } from '@/data/providers/chainConfig';
-import type { PlotTile } from '@/domain/types';
+import type { PlotTile, GameStateSnapshot } from '@/domain/types';
+import { cacheGetOrSetAsync, cacheSet, cacheDel, cacheGetEntry, cacheSetWithTs } from '@/data/providers/simpleCache';
 import { signAndSubmitEntry } from '@/data/providers/wallet';
 import { viewGetMyFarm } from '@/data/providers/aptosView';
 import { AccountAddress, Bool, Deserializer, MoveOption, MoveVector, Serializable, Serializer, TransactionArgument, U64, U8 } from '@aptos-labs/ts-sdk';
 import { Buffer } from 'buffer';
-import {  } from "@aptos-labs/ts-sdk"
 
 function encodeCropTypeIdBytesHex(cropTypeId: string): string {
   // ABI: vector<u8>，这里使用 UTF-8 编码并返回 0x 前缀十六进制
@@ -15,6 +15,9 @@ function encodeCropTypeIdBytesHex(cropTypeId: string): string {
   const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
   return `0x${hex}`;
 }
+
+// Use shared simpleCache utilities for caching across modules
+
 
 function parsePlotId(plotId: string): { x: number; y: number } {
   // 约定前端 plotId 为 `${row}-${col}`，ABI 需要 (x, y)
@@ -130,6 +133,11 @@ export class PlotTileClass extends Serializable implements TransactionArgument{
 
 export const chainFieldProvider: FieldProvider = {
   async loadField() {
+  // Simple in-memory cache to avoid repeated on-chain view calls while UI re-renders.
+  // Only re-fetch from chain if the last cached value is older than 2s
+  const FIELD_TTL_MS = 2000; // 2s
+  const entry = cacheGetEntry<PlotTile[][]>('field:plots');
+  if (entry && Date.now() - entry.ts < FIELD_TTL_MS) return { plots: entry.value };
     // 调用 view 读取用户农场。当前合约返回 string 序列化，这里仅返回空网格，
     // 若后续返回结构化数据，可在此解析为 PlotTile[][]。
     let plots: PlotTile[][] = [];
@@ -144,7 +152,7 @@ export const chainFieldProvider: FieldProvider = {
           const inner = (result as string[])[0];
           let des = new Deserializer(Buffer.from(inner.replace("0x",""), 'hex'));
           let gold = des.deserializeU64();
-          // let = ();
+          cacheSet('field:gold', gold);
           let len = des.deserializeUleb128AsU32();
           let vec = [];
           for ( let i = 0 ; i < len ; i ++ ){
@@ -192,23 +200,65 @@ export const chainFieldProvider: FieldProvider = {
       } catch {}
       console.warn('[chain] view 调用失败: ', e);
     }
-    return { plots };
+  // update cache
+  cacheSet('field:plots', plots);
+  return { plots };
   },
   async plant(plotId, cropTypeId) {
     const { x, y } = parsePlotId(plotId);
     const cropBytes = encodeCropTypeIdBytesHex(cropTypeId);
     await submitEntry('plant', [x, y, cropBytes]);
-    return { plot: { id: plotId, crop: { cropTypeId, plantedAt: BigInt(Date.now()), watered: false } } };
+    const newPlot = { id: plotId, crop: { cropTypeId, plantedAt: BigInt(Date.now()), watered: false } } as PlotTile;
+    // update cache if present
+    const f = cacheGetEntry<PlotTile[][]>('field:plots');
+    if (f && Array.isArray(f.value)) {
+      for (let r = 0; r < f.value.length; r++) {
+        for (let c = 0; c < f.value[r].length; c++) {
+          if (f.value[r][c].id === newPlot.id) {
+            f.value[r][c] = newPlot;
+            cacheSetWithTs('field:plots', f.value, Date.now());
+            break;
+          }
+        }
+      }
+    }
+    return { plot: newPlot };
   },
   async water(plotId) {
     const { x, y } = parsePlotId(plotId);
     await submitEntry('water', [x, y]);
-    return { plot: { id: plotId, crop: { cropTypeId: '', plantedAt: BigInt(Date.now()), watered: true } } };
+    const newPlot = { id: plotId, crop: { cropTypeId: '', plantedAt: BigInt(Date.now()), watered: true } } as PlotTile;
+    const f2 = cacheGetEntry<PlotTile[][]>('field:plots');
+    if (f2 && Array.isArray(f2.value)) {
+      for (let r = 0; r < f2.value.length; r++) {
+        for (let c = 0; c < f2.value[r].length; c++) {
+          if (f2.value[r][c].id === newPlot.id) {
+            f2.value[r][c] = newPlot;
+            cacheSetWithTs('field:plots', f2.value, Date.now());
+            break;
+          }
+        }
+      }
+    }
+    return { plot: newPlot };
   },
   async harvest(plotId) {
     const { x, y } = parsePlotId(plotId);
     await submitEntry('harvest', [x, y]);
     // 修复类型：crop 应为 undefined 而不是 null
+    // remove from cache if we have it
+    const f3 = cacheGetEntry<PlotTile[][]>('field:plots');
+    if (f3 && Array.isArray(f3.value)) {
+      for (let r = 0; r < f3.value.length; r++) {
+        for (let c = 0; c < f3.value[r].length; c++) {
+          if (f3.value[r][c].id === plotId) {
+            f3.value[r][c].crop = undefined;
+            cacheSetWithTs('field:plots', f3.value, Date.now());
+            break;
+          }
+        }
+      }
+    }
     return { plot: { id: plotId, crop: undefined } };
   }
 };
@@ -232,13 +282,20 @@ export const chainFriendsProvider: FriendsProvider = {
     return [];
   },
   async loadFriendState(friendId) {
-    // 预留：拉取对方快照并映射为本地 `GameStateSnapshot`
-    return { gold: 0, plots: [] as PlotTile[][], inventory: [] };
+  const FRIEND_TTL_MS = 10_000; // cache friend state for 10s
+  const e = cacheGetEntry<GameStateSnapshot>(`friend:${friendId}`);
+  if (e && Date.now() - e.ts < FRIEND_TTL_MS) return e.value;
+  // TODO: implement actual chain view fetch for friend state; return empty for now
+  const state = { gold: 0, plots: [] as PlotTile[][], inventory: [] };
+  cacheSetWithTs(`friend:${friendId}`, state, Date.now());
+  return state;
   },
   async steal(friendId, plotId) {
     // 预留：若后续 ABI 暴露 steal(thief, friend, plot) 则在此对接
     void friendId; void plotId;
-    return { cropTypeId: '', qty: 0 };
+  // Invalidate friend cache on steal attempts so subsequent loads refetch from chain
+  cacheDel(`friend:${friendId}`);
+  return { cropTypeId: '', qty: 0 };
   }
 };
 

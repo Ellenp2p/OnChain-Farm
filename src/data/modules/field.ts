@@ -5,6 +5,7 @@ export interface FieldProvider {
   plant(plotId: string, cropTypeId: string): Promise<{ plot: PlotTile; inventory?: InventoryItem[] }>;
   water(plotId: string): Promise<{ plot: PlotTile }>;
   harvest(plotId: string): Promise<{ plot: PlotTile; inventory?: InventoryItem[] }>;
+  
 }
 
 

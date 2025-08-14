@@ -20,7 +20,7 @@ function createEmptyPlots(): PlotTile[][] {
   for (let r = 0; r < DEFAULT_GRID.rows; r++) {
     const row: PlotTile[] = [];
     for (let c = 0; c < DEFAULT_GRID.cols; c++) {
-      row.push({ id: `${r}-${c}`, crop: null });
+  row.push({ id: `${r}-${c}`, crop: undefined });
     }
     plots.push(row);
   }
@@ -30,9 +30,9 @@ function createEmptyPlots(): PlotTile[][] {
 function seedFriendState(seed: number): GameStateSnapshot {
   const plots = createEmptyPlots();
   const now = Date.now();
-  plots[0][3].crop = { cropTypeId: 'wheat', plantedAt: now - CROPS.wheat.growthSeconds * 1000 - 2000, watered: true };
-  plots[1][2].crop = { cropTypeId: 'carrot', plantedAt: now - (CROPS.carrot.growthSeconds * 1000) / 2, watered: false };
-  plots[2][4].crop = { cropTypeId: 'corn', plantedAt: now - 5000, watered: true };
+  plots[0][3].crop = { cropTypeId: 'wheat', plantedAt: BigInt(now) - BigInt(CROPS.wheat.growthSeconds) * 1000n - 2000n, watered: true };
+  plots[1][2].crop = { cropTypeId: 'carrot', plantedAt: BigInt(now) - (BigInt(CROPS.carrot.growthSeconds) * 1000n) / 2n, watered: false };
+  plots[2][4].crop = { cropTypeId: 'corn', plantedAt: BigInt(now) - 5000n, watered: true };
   return {
     gold: 12 + seed,
     plots,
@@ -65,9 +65,9 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
         if (!plot || !plot.crop) return;
         const crop = plot.crop;
         const cropType = CROPS[crop.cropTypeId];
-        const grown = Date.now() - crop.plantedAt >= cropType.growthSeconds * 1000;
-        if (!grown || !crop.watered) return;
-        plot.crop = null;
+  const grown = BigInt(Date.now()) - crop.plantedAt >= BigInt(cropType.growthSeconds) * 1000n;
+  if (!grown || !crop.watered) return;
+  plot.crop = undefined;
         const game = useGameStore.getState();
         useGameStore.setState(
           produce(game, (draftGame) => {

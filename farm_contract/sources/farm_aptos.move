@@ -131,7 +131,7 @@ module farm_aptos::farm_aptos {
 
         let farm = Farm {
             gold: 10,
-            plots: plots,
+            plots,
             inventory: smart_table::new(),
         };
 

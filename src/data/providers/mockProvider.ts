@@ -8,7 +8,7 @@ function createInitialState(): GameStateSnapshot {
   for (let r = 0; r < DEFAULT_GRID.rows; r++) {
     const row: PlotTile[] = [];
     for (let c = 0; c < DEFAULT_GRID.cols; c++) {
-      row.push({ id: `${r}-${c}`, crop: null });
+  row.push({ id: `${r}-${c}`, crop: undefined });
     }
     plots.push(row);
   }
