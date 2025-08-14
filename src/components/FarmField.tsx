@@ -68,7 +68,7 @@ export function FarmField() {
           );
         })}
       </div>
-      <div className="muted" style={{ marginTop: 8 }}>
+      <div className="muted" style={{ marginTop: 8, overflowX: 'auto' }}>
         网格：{DEFAULT_GRID.rows}x{DEFAULT_GRID.cols}
       </div>
       <PlotDetails />

@@ -14,6 +14,8 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  /* 防止 iOS 双击缩放带来的闪烁；禁用系统默认高亮 */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .layout {
@@ -57,10 +59,9 @@ body {
 
 .field {
   display: grid;
-  grid-template-columns: repeat(8, 64px);
-  grid-auto-rows: 64px;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 6px;
-  justify-content: start;
+  justify-content: stretch;
   align-content: start;
   padding: 8px;
   background: linear-gradient(180deg, #0b1220, #0a0f1a);
@@ -78,8 +79,15 @@ body {
   cursor: pointer;
   position: relative;
   color: var(--text);
+  aspect-ratio: 1 / 1;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.02s ease-out, outline-color 0.1s ease;
 }
-.tile:hover { outline: 1px solid var(--grid); }
+.tile:hover, .tile:focus-visible { outline: 1px solid var(--grid); }
+.tile:active { transform: translateY(1px); }
 .tile .badge { position: absolute; top: 4px; right: 4px; font-size: 10px; opacity: 0.8; }
 
 .hint {
@@ -110,4 +118,36 @@ body {
 .btn.primary { background: var(--accent); color: #ffffff; border-color: var(--accent-2); }
 .muted { opacity: 0.7; }
 
+/* 响应式与移动优化 */
+@media (max-width: 1280px) {
+  .game { grid-template-columns: 240px 1fr 260px; gap: 10px; padding: 10px; }
+}
 
+@media (max-width: 900px) {
+  .topbar { position: sticky; top: 0; z-index: 20; padding-top: calc(8px + env(safe-area-inset-top)); }
+  .bottombar { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  .topbar { flex-wrap: wrap; gap: 8px; }
+  .topbar .muted { display: none; }
+
+  .game { display: flex; flex-direction: column; gap: 10px; padding: 10px; }
+  /* 将中间的农场面板置顶显示 */
+  .game.main > .panel:nth-child(2) { order: -1; }
+
+  .panel { padding: 10px; }
+  .panel-xl { width: 100%; margin: 12px 0; padding: 16px; }
+
+  .btn, .tool { padding: 10px 12px; font-size: 14px; }
+  .input { padding: 12px 12px; font-size: 16px; }
+  .list-item { min-height: 44px; }
+
+  /* 工具横向滚动（避免折行过高） */
+  .toolbar { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+  .tools-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+
+  /* 农田在小屏使用固定列宽并允许横向滚动，保证触控目标尺寸 */
+  .field { grid-template-columns: repeat(8, 64px); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+@media (max-width: 480px) {
+  .tile { font-size: 11px; }
+}

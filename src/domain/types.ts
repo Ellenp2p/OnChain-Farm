@@ -13,13 +13,13 @@ export interface CropType {
 
 export interface CropInstance {
   cropTypeId: string;
-  plantedAt: number; // epoch ms
+  plantedAt: bigint; // epoch ms
   watered: boolean;
 }
 
 export interface PlotTile {
   id: string; // `${row}-${col}`
-  crop: CropInstance | null;
+  crop?: CropInstance;
 }
 
 export interface InventoryItem {

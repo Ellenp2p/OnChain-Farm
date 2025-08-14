@@ -32,7 +32,7 @@ export function Toolbar() {
       {selectedTool === 'plant' && (
         <div className="subbar">
           <div className="subbar-title">选择作物（仅显示可种）</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div className="tools-scroll" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {plantable.length === 0 && (
               <div className="hint">暂无可种作物，请前往右侧“市场”购买种子</div>
             )}

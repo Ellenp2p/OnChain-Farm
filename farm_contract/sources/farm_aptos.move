@@ -3,6 +3,7 @@ module farm_aptos::farm_aptos {
     use std::option;
     use std::vector;
     use std::string;
+    use std::bcs;
     use std::string_utils;
     use aptos_framework::object;
     use aptos_framework::smart_table;
@@ -53,7 +54,7 @@ module farm_aptos::farm_aptos {
     }
 
     /// 物品项，对应前端 `InventoryItem`
-    struct InventoryItem has store, drop {
+    struct InventoryItem has store, drop, copy {
         // 当前物品
         kind: InventoryKind,
         // 作物类型 ID
@@ -81,18 +82,28 @@ module farm_aptos::farm_aptos {
         extend_ref: object::ExtendRef,
         transfer_ref: object::TransferRef,
     }
+    
+    // 通过地址和前缀获取种子
+    public fun get_seed (prefix: vector<u8>): vector<u8> {
+        let seed = vector::empty<u8>();
+        seed.append(bcs::to_bytes(&@farm_aptos));
+        seed.append(prefix);
+        seed
+    }
 
     /// 初始化玩家农场
-    fun init_farm(owner: &signer, rows: u64, cols: u64) {
+   fun init_farm(owner: &signer, rows: u64, cols: u64) {
         
-        let address: address = object::create_object_address(&signer::address_of(owner), b"farm");
+        let address: address = object::create_object_address(
+            &signer::address_of(owner), get_seed( b"farm")
+        );
         
         if( object::object_exists<Farm>(address) ){
             return ;
         }else {
             let farm_cref = &object::create_named_object(
                 owner,
-                b"farm",
+                get_seed( b"farm"),
             );
             let farm_ref = ObjectRef {
                 extend_ref: object::generate_extend_ref(farm_cref),
@@ -103,10 +114,7 @@ module farm_aptos::farm_aptos {
 
             object::disable_ungated_transfer(&object::generate_transfer_ref(farm_cref));
 
-        };
-        
-
-        let plots = vector[];
+            let plots = vector[];
 
         for(i in 0..rows){
             let row_vec = vector::empty<PlotTile>();
@@ -127,7 +135,11 @@ module farm_aptos::farm_aptos {
             inventory: smart_table::new(),
         };
 
-        move_to(owner, farm);
+        move_to(&object::generate_signer(farm_cref), farm);
+        };
+        
+
+        
     }
 
     inline fun get_farm_ref(owner: address): &mut Farm acquires Farm {
@@ -139,7 +151,7 @@ module farm_aptos::farm_aptos {
     inline fun get_farm_address(owner: address): option::Option<object::Object<Farm>> {
         let address = object::create_object_address(
             &owner,
-            b"farm",
+            get_seed( b"farm"),
         );
         if( object::object_exists<Farm>(address) ){
             option::some(object::address_to_object(address))
@@ -311,6 +323,10 @@ module farm_aptos::farm_aptos {
         };
     }
 
+    public entry fun init(owner: &signer){
+        init_farm(owner, 5, 5);
+    }
+
     /// 从好友地块偷取（演示接口）
     public entry fun steal(_thief: &signer, _friend: address, _plot_id: vector<u8>) {
         // TODO: 校验作物成熟，从好友地块转移一份产物到小偷库存
@@ -319,14 +335,22 @@ module farm_aptos::farm_aptos {
     
     #[view]
     /// 读取自己农场快照（只定义接口；可改用 view 函数模块单独暴）
-    public fun get_my_farm(owner: address): vector<string::String> acquires Farm{
+    public fun get_my_farm(owner: address): vector<u8> acquires Farm{
         // TODO: 视图函数占位（可改为 aptos-views）
-        let farm = get_farm_ref(owner);
+        if( get_farm_address(owner).is_none() ){
+            return vector[];
+        };
 
-        let result = vector::empty<string::String>();
-        result.push_back(string_utils::to_string(farm));
-        result
+        let farm = get_farm_ref(owner);
+        let inventory = farm.inventory.to_simple_map();
+        let vec = bcs::to_bytes(&farm.gold);
+        vec.append(bcs::to_bytes(&farm.plots));
+        vec.append(bcs::to_bytes(&inventory));
+
+        vec
+
     }
+
 }
 
 
