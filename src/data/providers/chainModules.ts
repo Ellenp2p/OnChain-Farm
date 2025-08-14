@@ -2,13 +2,14 @@ import type { FieldProvider } from '@/data/modules/field';
 import type { MarketProvider } from '@/data/modules/market';
 import type { FriendsProvider } from '@/data/modules/friends';
 import { getChainConfig } from '@/data/providers/chainConfig';
+import type { PlotTile } from '@/domain/types';
 
 export const chainFieldProvider: FieldProvider = {
   async loadField() {
     // TODO: 从链上读取地块网格状态
     const cfg = getChainConfig();
     void cfg; // 预留使用
-    return { plots: [] };
+    return { plots: [] as PlotTile[][] };
   },
   async plant(plotId, cropTypeId) {
     // TODO: 提交链上交易：在指定地块播种指定作物
@@ -42,7 +43,7 @@ export const chainFriendsProvider: FriendsProvider = {
   },
   async loadFriendState(friendId) {
     // TODO: 从链上读取好友的农场快照
-    return { gold: 0, plots: [], inventory: [] };
+    return { gold: 0, plots: [] as PlotTile[][], inventory: [] };
   },
   async steal(friendId, plotId) {
     // TODO: 提交链上交易：从好友地块偷取成熟作物

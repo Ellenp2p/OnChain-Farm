@@ -22,7 +22,7 @@ export function FarmField() {
   return (
     <div>
       <div className="field">
-        {plots.map(plot => {
+        {plots.flat().map(plot => {
           const crop = plot.crop;
           const a = assessAction(selectedTool, selectedSeed, inventory, plot);
           const c = crop ? CROPS[crop.cropTypeId] : undefined;
@@ -80,7 +80,7 @@ function PlotDetails() {
   const { selectedPlotId } = useUiStore();
   const { plots } = useGameStore();
   if (!selectedPlotId) return null;
-  const plot = plots.find(p => p.id === selectedPlotId);
+  const plot = plots.flat().find(p => p.id === selectedPlotId);
   if (!plot) return null;
   const crop = plot.crop;
   const c = crop ? CROPS[crop.cropTypeId] : undefined;

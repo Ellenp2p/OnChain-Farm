@@ -69,8 +69,10 @@ export const useGameStore = create<GameStoreState & GameStoreActions>()(
           const res = await providers.field.plant(plotId, seedId);
           set(
             produce((draft: GameStoreState) => {
-              const idx = draft.plots.findIndex(p => p.id === plotId);
-              if (idx >= 0) draft.plots[idx] = res.plot;
+              for (let r = 0; r < draft.plots.length; r++) {
+                const cIdx = draft.plots[r].findIndex(p => p.id === plotId);
+                if (cIdx >= 0) { draft.plots[r][cIdx] = res.plot; break; }
+              }
               if (res.inventory) draft.inventory = res.inventory;
             })
           );
@@ -80,8 +82,10 @@ export const useGameStore = create<GameStoreState & GameStoreActions>()(
           const res = await providers.field.water(plotId);
           set(
             produce((draft: GameStoreState) => {
-              const idx = draft.plots.findIndex(p => p.id === plotId);
-              if (idx >= 0) draft.plots[idx] = res.plot;
+              for (let r = 0; r < draft.plots.length; r++) {
+                const cIdx = draft.plots[r].findIndex(p => p.id === plotId);
+                if (cIdx >= 0) { draft.plots[r][cIdx] = res.plot; break; }
+              }
             })
           );
           return;
@@ -90,8 +94,10 @@ export const useGameStore = create<GameStoreState & GameStoreActions>()(
           const res = await providers.field.harvest(plotId);
           set(
             produce((draft: GameStoreState) => {
-              const idx = draft.plots.findIndex(p => p.id === plotId);
-              if (idx >= 0) draft.plots[idx] = res.plot;
+              for (let r = 0; r < draft.plots.length; r++) {
+                const cIdx = draft.plots[r].findIndex(p => p.id === plotId);
+                if (cIdx >= 0) { draft.plots[r][cIdx] = res.plot; break; }
+              }
               if (res.inventory) draft.inventory = res.inventory;
             })
           );

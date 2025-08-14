@@ -31,7 +31,7 @@ export interface InventoryItem {
 
 export interface GameStateSnapshot {
   gold: number;
-  plots: PlotTile[];
+  plots: PlotTile[][];
   inventory: InventoryItem[];
 }
 

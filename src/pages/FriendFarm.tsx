@@ -60,7 +60,7 @@ function FriendField({ tool, friendId }: { tool: FriendTool; friendId: string })
   return (
     <div>
       <div className="field">
-        {state.plots.map(plot => {
+        {state.plots.flat().map(plot => {
           const crop = plot.crop;
           const c = crop ? CROPS[crop.cropTypeId] : undefined;
           const pct = crop ? Math.floor(growthProgress(crop.plantedAt, crop.cropTypeId) * 100) : 0;

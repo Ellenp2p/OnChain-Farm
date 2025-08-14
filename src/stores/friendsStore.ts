@@ -15,12 +15,14 @@ interface FriendsState {
   stealFromFriend: (friendId: string, plotId: string) => void;
 }
 
-function createEmptyPlots(): PlotTile[] {
-  const plots: PlotTile[] = [];
+function createEmptyPlots(): PlotTile[][] {
+  const plots: PlotTile[][] = [];
   for (let r = 0; r < DEFAULT_GRID.rows; r++) {
+    const row: PlotTile[] = [];
     for (let c = 0; c < DEFAULT_GRID.cols; c++) {
-      plots.push({ id: `${r}-${c}`, crop: null });
+      row.push({ id: `${r}-${c}`, crop: null });
     }
+    plots.push(row);
   }
   return plots;
 }
@@ -28,9 +30,9 @@ function createEmptyPlots(): PlotTile[] {
 function seedFriendState(seed: number): GameStateSnapshot {
   const plots = createEmptyPlots();
   const now = Date.now();
-  plots[3].crop = { cropTypeId: 'wheat', plantedAt: now - CROPS.wheat.growthSeconds * 1000 - 2000, watered: true };
-  plots[10].crop = { cropTypeId: 'carrot', plantedAt: now - (CROPS.carrot.growthSeconds * 1000) / 2, watered: false };
-  plots[20].crop = { cropTypeId: 'corn', plantedAt: now - 5000, watered: true };
+  plots[0][3].crop = { cropTypeId: 'wheat', plantedAt: now - CROPS.wheat.growthSeconds * 1000 - 2000, watered: true };
+  plots[1][2].crop = { cropTypeId: 'carrot', plantedAt: now - (CROPS.carrot.growthSeconds * 1000) / 2, watered: false };
+  plots[2][4].crop = { cropTypeId: 'corn', plantedAt: now - 5000, watered: true };
   return {
     gold: 12 + seed,
     plots,
@@ -59,7 +61,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       produce((draft: FriendsState) => {
         const state = draft.friendStates[friendId];
         if (!state) return;
-        const plot = state.plots.find(p => p.id === plotId);
+        const plot = state.plots.flat().find(p => p.id === plotId);
         if (!plot || !plot.crop) return;
         const crop = plot.crop;
         const cropType = CROPS[crop.cropTypeId];

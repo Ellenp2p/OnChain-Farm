@@ -15,9 +15,11 @@ function saveLocal(state: GameStateSnapshot) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 function createEmpty(): GameStateSnapshot {
-  const plots: PlotTile[] = [];
+  const plots: PlotTile[][] = [];
   for (let r = 0; r < DEFAULT_GRID.rows; r++) {
-    for (let c = 0; c < DEFAULT_GRID.cols; c++) plots.push({ id: `${r}-${c}`, crop: null });
+    const row: PlotTile[] = [];
+    for (let c = 0; c < DEFAULT_GRID.cols; c++) row.push({ id: `${r}-${c}`, crop: null });
+    plots.push(row);
   }
   return { gold: 20, plots, inventory: [ { id: 'seed:wheat', kind: 'seed', cropTypeId: 'wheat', quantity: 5 } ] };
 }
@@ -33,7 +35,7 @@ export const mockFieldProvider: FieldProvider = {
   },
   async plant(plotId, cropTypeId) {
     const s = ensure();
-    const plot = s.plots.find(p => p.id === plotId);
+    const plot = s.plots.flat().find(p => p.id === plotId);
     if (!plot || plot.crop) return { plot: plot! };
     const inv = s.inventory.find(i => i.kind === 'seed' && i.cropTypeId === cropTypeId);
     if (!inv || inv.quantity <= 0) return { plot };
@@ -44,14 +46,14 @@ export const mockFieldProvider: FieldProvider = {
   },
   async water(plotId) {
     const s = ensure();
-    const plot = s.plots.find(p => p.id === plotId);
+    const plot = s.plots.flat().find(p => p.id === plotId);
     if (plot && plot.crop) plot.crop.watered = true;
     saveLocal(s);
     return { plot: plot! };
   },
   async harvest(plotId) {
     const s = ensure();
-    const plot = s.plots.find(p => p.id === plotId);
+    const plot = s.plots.flat().find(p => p.id === plotId);
     if (!plot || !plot.crop) return { plot: plot! };
     const cropTypeId = plot.crop.cropTypeId;
     const inv = s.inventory.find(i => i.kind === 'produce' && i.cropTypeId === cropTypeId);
@@ -92,12 +94,14 @@ export const mockFriendsProvider: FriendsProvider = {
   async loadFriendState(friendId) {
     // 简化：重用本地生成逻辑
     const now = Date.now();
-    const plots: PlotTile[] = [];
+    const plots: PlotTile[][] = [];
     for (let r = 0; r < DEFAULT_GRID.rows; r++) {
-      for (let c = 0; c < DEFAULT_GRID.cols; c++) plots.push({ id: `${r}-${c}`, crop: null });
+      const row: PlotTile[] = [];
+      for (let c = 0; c < DEFAULT_GRID.cols; c++) row.push({ id: `${r}-${c}`, crop: null });
+      plots.push(row);
     }
-    plots[3].crop = { cropTypeId: 'wheat', plantedAt: now - CROPS.wheat.growthSeconds * 1000 - 2000, watered: true };
-    plots[10].crop = { cropTypeId: 'carrot', plantedAt: now - (CROPS.carrot.growthSeconds * 1000) / 2, watered: false };
+    plots[0][3].crop = { cropTypeId: 'wheat', plantedAt: now - CROPS.wheat.growthSeconds * 1000 - 2000, watered: true };
+    plots[1][2].crop = { cropTypeId: 'carrot', plantedAt: now - (CROPS.carrot.growthSeconds * 1000) / 2, watered: false };
     return { gold: 10 + friendId.length, plots, inventory: [] };
   },
   async steal(_friendId, _plotId) {

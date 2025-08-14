@@ -4,11 +4,13 @@ import { GameProvider, GameStateSnapshot, PlotTile } from '@/domain/types';
 const STORAGE_KEY = 'farm_aptos_mock_state_v1'; // 本地 Mock 存储键
 
 function createInitialState(): GameStateSnapshot {
-  const plots: PlotTile[] = [];
+  const plots: PlotTile[][] = [];
   for (let r = 0; r < DEFAULT_GRID.rows; r++) {
+    const row: PlotTile[] = [];
     for (let c = 0; c < DEFAULT_GRID.cols; c++) {
-      plots.push({ id: `${r}-${c}`, crop: null });
+      row.push({ id: `${r}-${c}`, crop: null });
     }
+    plots.push(row);
   }
   return {
     gold: 20,
