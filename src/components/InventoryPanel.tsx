@@ -12,22 +12,32 @@ export function InventoryPanel() {
       <div>
         <div className="muted">种子</div>
         {seeds.length === 0 && <div className="muted">无</div>}
-        {seeds.map(s => (
-          <div className="list-item" key={s.id}>
-            <div>{CROPS[s.cropTypeId].emoji} {CROPS[s.cropTypeId].displayName}</div>
-            <div>x{s.quantity}</div>
-          </div>
-        ))}
+          {seeds.map(s => {
+            const crop = CROPS[s.cropTypeId];
+            return (
+              <div className="list-item" key={s.id}>
+                <div>
+                  {crop ? `${crop.emoji} ${crop.displayName}` : s.cropTypeId}
+                </div>
+                <div>x{s.quantity}</div>
+              </div>
+            );
+          })}
       </div>
       <div>
         <div className="muted">产物</div>
         {produces.length === 0 && <div className="muted">无</div>}
-        {produces.map(p => (
-          <div className="list-item" key={p.id}>
-            <div>{CROPS[p.cropTypeId].emoji} {CROPS[p.cropTypeId].displayName}</div>
-            <div>x{p.quantity}</div>
-          </div>
-        ))}
+          {produces.map(p => {
+            const crop = CROPS[p.cropTypeId];
+            return (
+              <div className="list-item" key={p.id}>
+                <div>
+                  {crop ? `${crop.emoji} ${crop.displayName}` : p.cropTypeId}
+                </div>
+                <div>x{p.quantity}</div>
+              </div>
+            );
+          })}
       </div>
     </div>
   );

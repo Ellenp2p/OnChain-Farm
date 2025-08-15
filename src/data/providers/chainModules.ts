@@ -6,16 +6,15 @@ import type { PlotTile, GameStateSnapshot, InventoryItem } from '@/domain/types'
 import { cacheSet, cacheDel, cacheGetEntry, cacheSetWithTs } from '@/data/providers/simpleCache';
 import { signAndSubmitEntry } from '@/data/providers/wallet';
 import { viewGetMyFarm } from '@/data/providers/aptosView';
-import { Deserializer, Serializable, Serializer, TransactionArgument, U64, U8 } from '@aptos-labs/ts-sdk';
+import { Deserializer, Serializable, Serializer, TransactionArgument, U8 } from '@aptos-labs/ts-sdk';
 import { Buffer } from 'buffer';
-import { ca } from 'node_modules/@aptos-labs/ts-sdk/dist/esm/account--Q9z_xMN.mjs';
+import { produce } from 'immer';
 
 function encodeCropTypeIdBytesHex(cropTypeId: string): Uint8Array {
   return Buffer.from(cropTypeId, "utf8")
 }
 
 // Use shared simpleCache utilities for caching across modules
-
 
 function parsePlotId(plotId: string): { x: number; y: number } {
   // 约定前端 plotId 为 `${row}-${col}`，ABI 需要 (x, y)
@@ -132,8 +131,8 @@ export class PlotTileClass extends Serializable implements TransactionArgument{
 export const chainFieldProvider: FieldProvider = {
   async loadField() {
   // Simple in-memory cache to avoid repeated on-chain view calls while UI re-renders.
-  // Only re-fetch from chain if the last cached value is older than 2s
-  const FIELD_TTL_MS = 2000; // 2s
+  // Only re-fetch from chain if the last cached value is older than 500ms
+  const FIELD_TTL_MS = 500; // 500ms
   const entry = cacheGetEntry<PlotTile[][]>('field:plots');
   if (entry && Date.now() - entry.ts < FIELD_TTL_MS) return { plots: entry.value };
     // 调用 view 读取用户农场。当前合约返回 string 序列化，这里仅返回空网格，
@@ -159,11 +158,12 @@ export const chainFieldProvider: FieldProvider = {
               )
           }
 
-          vec.forEach((v: PlotTileClass[]) => {
+          vec.forEach((v: PlotTileClass[], index: number) => {
             plots.push(
               v.map((p) => {
                 return {
-                  id: p.id.toString(),
+                  // x-y
+                  id: `${index}-${p.id}`,
                   crop: p.crop
                     ? {
                         cropTypeId: Buffer.from(p.crop.crop_type_id).toString(),
@@ -176,28 +176,42 @@ export const chainFieldProvider: FieldProvider = {
             ));
           })
 
-          let inv_len = des.deserializeUleb128AsU32()
+          let seed_len = des.deserializeUleb128AsU32()
 
           let seeds: InventoryItem[] = [];
-          for (let i = 0; i < inv_len; i++) {
+          for (let i = 0; i < seed_len; i++) {
             let key = des.deserializeBytes();
-            // type == 0 代表种子
-            // type == 1 代表作物
-
-            let type = des.deserializeUleb128AsU32();
-
             let crop_type_id = des.deserializeBytes();
             let quantity = des.deserializeU64();
             seeds.push(
               {
                 id: Buffer.from(key).toString("utf8"),
-                kind: type === 0 ? "seed" : "produce",
+                kind: "seed",
                 cropTypeId: Buffer.from(crop_type_id).toString("utf8"),
                 quantity: Number(quantity.toString())
               }
             )
           }
-          cacheSet('field:inventory', seeds);
+
+          let produce_len = des.deserializeUleb128AsU32();
+          let produce : InventoryItem[]= [];
+          for (let i = 0; i < produce_len; i++) {
+            let key = des.deserializeBytes();
+            let crop_type_id = des.deserializeBytes();
+            let quantity = des.deserializeU64();
+            produce.push(
+              {
+                id: Buffer.from(key).toString("utf8"),
+                kind: "produce",
+                cropTypeId: Buffer.from(crop_type_id).toString("utf8"),
+                quantity: Number(quantity.toString())
+              }
+            )
+          }
+
+          let inventory = seeds.concat(produce);
+
+          cacheSet('field:inventory', inventory);
 
           if (Array.isArray(inner) && inner.length === 0) needInit = true;
         }

@@ -7,12 +7,11 @@ import { useGameStore } from '@/stores/gameStore';
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useUiStore } from '@/stores/uiStore';
-import { WalletConnectButton } from '@/components/WalletConnect';
-import {walletAdapter} from "@wgb5445/aptos-wallet-connect-kit"
+import { connectWallet } from '@/data/providers/wallet';
 
 export function App() {
   const { gold, load } = useGameStore();
-  const { refreshWallet, initPromptOpen, openInitPrompt, closeInitPrompt, initPending, initFarm } = useUiStore();
+  const { walletConnected, walletAddress, connect, disconnect, refreshWallet, initPromptOpen, openInitPrompt, closeInitPrompt, initPending, initFarm } = useUiStore();
   useEffect(() => { void refreshWallet(); void load(); }, [load]);
 
   
@@ -26,7 +25,13 @@ export function App() {
           <Link className="btn" to="/friends">好友列表</Link>
           <Link className="btn" to="/settings">设置</Link>
           <div>💰 {gold}</div>
-          <WalletConnectButton autoConnect></WalletConnectButton>
+          {walletConnected ? (
+            <button className="btn" onClick={() => void disconnect()} title={walletAddress ?? ''}>
+              已连接 {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+            </button>
+          ) : (
+            <button className="btn" onClick={() => void connect()}>连接钱包</button>
+          )}
         </div>
       </div>
       <div className="game main">

@@ -61,6 +61,7 @@ export const useGameStore = create<GameStoreState & GameStoreActions>()(
 
       async load() {
         // 从模块化 Provider 汇总初始状态
+        console.log("Loading game state...");
         const field = await providers.field.loadField();
         set(state => ({ ...state, plots: field.plots }));
         // Try to read on-chain gold cached by the field provider
@@ -131,7 +132,7 @@ export const useGameStore = create<GameStoreState & GameStoreActions>()(
         const res = await providers.market.sellProduce(cropTypeId, quantity);
         set(
           produce((draft: GameStoreState) => {
-            draft.gold += res.goldDelta;
+            draft.gold = Number((BigInt(draft.gold) + BigInt(res.goldDelta)).toString());
             if (res.inventory) draft.inventory = res.inventory;
           })
         );

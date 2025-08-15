@@ -20,11 +20,6 @@ module farm_aptos::farm_aptos {
         watered: bool,
     }
 
-    enum InventoryKind has store, drop, copy{
-        Seed,
-        Produce,
-    }
-
     // 作物注册表
     struct CropRegistry has key {
         crops: smart_table::SmartTable<vector<u8>, CropKind>,
@@ -55,8 +50,6 @@ module farm_aptos::farm_aptos {
 
     /// 物品项，对应前端 `InventoryItem`
     struct InventoryItem has store, drop, copy {
-        // 当前物品
-        kind: InventoryKind,
         // 作物类型 ID
         crop_type_id: vector<u8>,
         // 数量
@@ -75,7 +68,8 @@ module farm_aptos::farm_aptos {
     struct Farm has key {
         gold: u64,
         plots: vector<vector<PlotTile>>,
-        inventory: smart_table::SmartTable<vector<u8>, InventoryItem>,
+        inventory_seed: smart_table::SmartTable<vector<u8>, InventoryItem>,
+        inventory_produce: smart_table::SmartTable<vector<u8>, InventoryItem>,
     }
 
     struct ObjectRef has key {
@@ -139,7 +133,8 @@ module farm_aptos::farm_aptos {
         let farm = Farm {
             gold: 10,
             plots,
-            inventory: smart_table::new(),
+            inventory_seed: smart_table::new(),
+            inventory_produce: smart_table::new(),
         };
 
         move_to(&object::generate_signer(farm_cref), farm);
@@ -175,11 +170,9 @@ module farm_aptos::farm_aptos {
         assert!(plot_tile.crop.is_none(), 2);
 
         // 检查作物种子是否存在
-        assert!(farm.inventory.contains(crop_type_id), 3);
+        assert!(farm.inventory_seed.contains(crop_type_id), 3);
 
-        // 检查确实是种子
-        let inventory_item = farm.inventory.borrow_mut(crop_type_id);
-        assert!(inventory_item.kind == InventoryKind::Seed, 4);
+        let inventory_item = farm.inventory_seed.borrow_mut(crop_type_id);
 
         // 检查库存数量
         assert!(inventory_item.quantity > 0, 5);
@@ -189,7 +182,7 @@ module farm_aptos::farm_aptos {
 
         // 检查库存，如果为空则清除
         if( inventory_item.quantity == 0 ){
-            farm.inventory.remove(crop_type_id);
+            farm.inventory_seed.remove(crop_type_id);
         };
 
         // 写入地块
@@ -247,16 +240,15 @@ module farm_aptos::farm_aptos {
                     assert!(elapsed_sec > *mature_time, 4);
 
                     // 发放产物
-                    if( farm.inventory.contains(crop_instance.crop_type_id) ){
-                        let inventory_item = farm.inventory.borrow_mut(crop_instance.crop_type_id);
+                    if( farm.inventory_produce.contains(crop_instance.crop_type_id) ){
+                        let inventory_item = farm.inventory_produce.borrow_mut(crop_instance.crop_type_id);
                         inventory_item.quantity += *yield;
                     }else { 
                         let inventory_item = InventoryItem {
-                            kind: InventoryKind::Produce,
                             crop_type_id: crop_instance.crop_type_id,
                             quantity: *yield,
                         };
-                        farm.inventory.add(crop_instance.crop_type_id, inventory_item);
+                        farm.inventory_produce.add(crop_instance.crop_type_id, inventory_item);
                     }
                 },
             }
@@ -282,17 +274,16 @@ module farm_aptos::farm_aptos {
                 // 扣除金币
                 farm.gold -= *seed_price * qty;
 
-                if( farm.inventory.contains(crop_type_id) ){
-                    let inventory_item = farm.inventory.borrow_mut(crop_type_id);
+                if( farm.inventory_seed.contains(crop_type_id) ){
+                    let inventory_item = farm.inventory_seed.borrow_mut(crop_type_id);
                     inventory_item.quantity += qty;
                 }else {
                     // 新增库存
                     let inventory_item = InventoryItem {
-                        kind: InventoryKind::Seed,
                         crop_type_id,
                         quantity: qty,
                     };
-                    farm.inventory.add(crop_type_id, inventory_item);
+                    farm.inventory_seed.add(crop_type_id, inventory_item);
                 }
             },
         };
@@ -302,9 +293,8 @@ module farm_aptos::farm_aptos {
     public entry fun sell_produce(owner: &signer, crop_type_id: vector<u8>, qty: u64) acquires Farm, CropRegistry {
         // TODO: 扣减 inventory(kind=1)，增加 gold
         let farm = get_farm_ref(signer::address_of(owner));
-        assert!(farm.inventory.contains(crop_type_id), 2);
-        let inventory_item = farm.inventory.borrow_mut(crop_type_id);
-        assert!(inventory_item.kind == InventoryKind::Produce, 3);
+        assert!(farm.inventory_produce.contains(crop_type_id), 2);
+        let inventory_item = farm.inventory_produce.borrow_mut(crop_type_id);
         assert!(inventory_item.quantity >= qty, 4);
 
         // 扣除库存
@@ -312,7 +302,7 @@ module farm_aptos::farm_aptos {
 
         // 检查库存，如果为空则清除
         if( inventory_item.quantity == 0 ){
-            farm.inventory.remove(crop_type_id);
+            farm.inventory_produce.remove(crop_type_id);
         };
 
         // 查看作物价格
@@ -349,10 +339,13 @@ module farm_aptos::farm_aptos {
         };
 
         let farm = get_farm_ref(owner);
-        let inventory = farm.inventory.to_simple_map();
+        let inventory_seed = farm.inventory_seed.to_simple_map();
+        let inventory_produce = farm.inventory_produce.to_simple_map();
+
         let vec = bcs::to_bytes(&farm.gold);
         vec.append(bcs::to_bytes(&farm.plots));
-        vec.append(bcs::to_bytes(&inventory));
+        vec.append(bcs::to_bytes(&inventory_seed));
+        vec.append(bcs::to_bytes(&inventory_produce));
 
         vec
 
@@ -370,10 +363,13 @@ module farm_aptos::farm_aptos {
 
     // admin
     public fun register_crop(sender: &signer, data: vector<u8>): CropKind acquires CropRegistry {
-        assert!(signer::address_of(sender) == @farm_aptos || object::is_owner(
-            object::address_to_object<object::ObjectCore>(@farm_aptos),
-            signer::address_of(sender)
-        ), 0x100);
+        assert!(
+            signer::address_of(sender) == @farm_aptos || 
+                object::is_owner(
+                object::address_to_object<object::ObjectCore>(@farm_aptos),
+                signer::address_of(sender)
+            ), 
+        0x100);
 
         let cursor = deserializer::new_cursor(data);
         let type = cursor.read_uleb128_u32();

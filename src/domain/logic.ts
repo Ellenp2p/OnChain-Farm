@@ -3,16 +3,15 @@ import { InventoryItem, PlotTile, ToolKind } from './types';
 
 export function isGrown(plantedAt: bigint, cropTypeId: string): boolean {
   const crop = CROPS[cropTypeId];
+  if (!crop) return false;
   const elapsed = BigInt(Date.now()) - plantedAt;
   return elapsed >= BigInt(crop.growthSeconds) * 1000n;
 }
 
 export function growthProgress(plantedAt: bigint, cropTypeId: string): number {
   const crop = CROPS[cropTypeId];
+  if (!crop) return 0;
   const elapsed = BigInt(Date.now()) - plantedAt;
-  // Compute progress using BigInt fixed-point scaling to avoid converting
-  // very large BigInt values to Number (which would lose precision).
-  // SCALE determines fractional precision (micro = 1_000_000 -> 6 decimal places).
   const needed = BigInt(crop.growthSeconds) * 1000n;
   if (needed <= 0n) return 0;
   if (elapsed <= 0n) return 0;
