@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { connectWallet, disconnectWallet, getWalletAccount, isWalletConnected, signAndSubmitEntry } from '@/data/providers/wallet';
+import { disconnectWallet, getWalletAccount, isWalletConnected, signAndSubmitEntry } from '@/data/providers/wallet';
 import { buildFullFunction } from '@/data/providers/aptosView';
 
 type Toast = { id: string; message: string; kind?: 'info' | 'error' | 'success' };
@@ -17,7 +17,6 @@ export interface UiActions {
   push: (message: string, kind?: Toast['kind']) => void;
   remove: (id: string) => void;
   selectPlot: (id: string | null) => void;
-  connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   refreshWallet: () => Promise<void>;
   openInitPrompt: () => void;
@@ -45,10 +44,6 @@ export const useUiStore = create<UiState & UiActions>((set, get) => ({
   },
   selectPlot(id) {
     set({ selectedPlotId: id });
-  },
-  async connect() {
-    const addr = await connectWallet();
-    set({ walletAddress: addr, walletConnected: true });
   },
   async disconnect() {
     await disconnectWallet();

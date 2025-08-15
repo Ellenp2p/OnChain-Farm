@@ -14,6 +14,15 @@ importers:
       '@aptos-labs/wallet-adapter-react':
         specifier: ^7.0.4
         version: 7.0.4(@aptos-labs/ts-sdk@4.0.0(got@11.8.6))(@telegram-apps/bridge@1.9.2)(@types/react@19.1.10)(@wallet-standard/core@1.1.1)(aptos@1.21.0)(react@19.1.1)
+      '@lit-labs/react':
+        specifier: ^2.1.3
+        version: 2.1.3(@types/react@19.1.10)
+      '@lit/react':
+        specifier: ^1.0.8
+        version: 1.0.8(@types/react@19.1.10)
+      '@wgb5445/aptos-wallet-connect-kit':
+        specifier: ^0.1.2
+        version: 0.1.2(@types/react@19.1.10)(@wallet-standard/core@1.1.1)(got@11.8.6)(immer@10.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
@@ -94,6 +103,10 @@ packages:
     engines: {node: '>=20.0.0'}
     peerDependencies:
       got: ^11.8.6
+
+  '@aptos-labs/ts-sdk@2.0.1':
+    resolution: {integrity: sha512-k39Ks+qNcWxWujQrixMaV3ZIO8G9/qzIpDuV7+Td12GWNxXxKze5BqD6pFI3Q1iwI4mw65v1yxTi/jt5ted39Q==}
+    engines: {node: '>=20.0.0'}
 
   '@aptos-labs/ts-sdk@4.0.0':
     resolution: {integrity: sha512-bRB9fT0t86btGyL/b5I4c3K1gZvldSvFv2KkV+1kEHt+yDbDrWI43wsfHLv0fFAVatCrH610NpLONMCnQSqQhA==}
@@ -387,6 +400,20 @@ packages:
   '@jridgewell/trace-mapping@0.3.30':
     resolution: {integrity: sha512-GQ7Nw5G2lTu/BtHTKfXhKHok2WGetd4XYcVKGx00SjAk8GMwgJM3zr6zORiPGuOE+/vkc90KtTosSSvaCjKb2Q==}
 
+  '@lit-labs/react@2.1.3':
+    resolution: {integrity: sha512-OD9h2JynerBQUMNzb563jiVpxfvPF0HjQkKY2mx0lpVYvD7F+rtJpOGz6ek+6ufMidV3i+MPT9SX62OKWHFrQg==}
+
+  '@lit-labs/ssr-dom-shim@1.4.0':
+    resolution: {integrity: sha512-ficsEARKnmmW5njugNYKipTm4SFnbik7CXtoencDZzmzo/dQ+2Q0bgkzJuoJP20Aj0F+izzJjOqsnkd6F/o1bw==}
+
+  '@lit/react@1.0.8':
+    resolution: {integrity: sha512-p2+YcF+JE67SRX3mMlJ1TKCSTsgyOVdAwd/nxp3NuV1+Cb6MWALbN6nT7Ld4tpmYofcE5kcaSY1YBB9erY+6fw==}
+    peerDependencies:
+      '@types/react': 17 || 18 || 19
+
+  '@lit/reactive-element@2.1.1':
+    resolution: {integrity: sha512-N+dm5PAYdQ8e6UlywyyrgI2t++wFGXfHx+dSJ1oBrg6FAxUj40jId++EaRm80MKX5JnlH1sBsyZ5h0bcZKemCg==}
+
   '@noble/curves@1.9.6':
     resolution: {integrity: sha512-GIKz/j99FRthB8icyJQA51E8Uk5hXmdyThjgQXRKiv9h0zeRlzSCLIzFw6K1LotZ3XuB7yzlf76qk7uBmTdFqA==}
     engines: {node: ^14.21.3 || >=16}
@@ -607,6 +634,9 @@ packages:
   '@types/responselike@1.0.3':
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
 
+  '@types/trusted-types@2.0.7':
+    resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
+
   '@vitejs/plugin-react@5.0.0':
     resolution: {integrity: sha512-Jx9JfsTa05bYkS9xo0hkofp2dCmp1blrKjw9JONs5BTHOvJCgLbaPSuZLGSVJW6u2qe0tc4eevY0+gSNNi0YCw==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -637,6 +667,9 @@ packages:
   '@wallet-standard/wallet@1.1.0':
     resolution: {integrity: sha512-Gt8TnSlDZpAl+RWOOAB/kuvC7RpcdWAlFbHNoi4gsXsfaWa1QCT6LBcfIYTPdOZC9OVZUDwqGuGAcqZejDmHjg==}
     engines: {node: '>=16'}
+
+  '@wgb5445/aptos-wallet-connect-kit@0.1.2':
+    resolution: {integrity: sha512-mgX9zS0tsNeLXq4MmggHJ5d2UOGwCCDiQaerys2UZuv5XITz3S/DavqRphXENq7f4mAcbhtgETVbbaCCCNOT0A==}
 
   aptos@1.21.0:
     resolution: {integrity: sha512-PRKjoFgL8tVEc9+oS7eJUv8GNxx8n3+0byH2+m7CP3raYOD6yFKOecuwjVMIJmgfpjp6xH0P0HDMGZAXmSyU0Q==}
@@ -882,6 +915,15 @@ packages:
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
+
+  lit-element@4.2.1:
+    resolution: {integrity: sha512-WGAWRGzirAgyphK2urmYOV72tlvnxw7YfyLDgQ+OZnM9vQQBQnumQ7jUJe6unEzwGU3ahFOjuz1iz1jjrpCPuw==}
+
+  lit-html@3.3.1:
+    resolution: {integrity: sha512-S9hbyDu/vs1qNrithiNyeyv64c9yqiW9l+DBgI18fL+MTvOtWoFR0FWiyq1TxaYef5wNlpEmzlXoBlZEO+WjoA==}
+
+  lit@3.3.1:
+    resolution: {integrity: sha512-Ksr/8L3PTapbdXJCk+EJVB78jDodUMaP54gD24W186zGRARvwrsPfS60wae/SSCTCNZVPd1chXqio1qHQmu4NA==}
 
   lowercase-keys@2.0.0:
     resolution: {integrity: sha512-tqNXrS78oMOE73NMxK4EMLQsQowWf8jKooH9g7xPavRT706R6bkQJ6DY2Te7QukaZsulxa30wQ7bk0pm4XiHmA==}
@@ -1163,6 +1205,22 @@ snapshots:
     dependencies:
       got: 11.8.6
 
+  '@aptos-labs/ts-sdk@2.0.1(got@11.8.6)':
+    dependencies:
+      '@aptos-labs/aptos-cli': 1.0.2
+      '@aptos-labs/aptos-client': 2.0.0(got@11.8.6)
+      '@noble/curves': 1.9.6
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      eventemitter3: 5.0.1
+      form-data: 4.0.4
+      js-base64: 3.7.8
+      jwt-decode: 4.0.0
+      poseidon-lite: 0.2.1
+    transitivePeerDependencies:
+      - got
+
   '@aptos-labs/ts-sdk@4.0.0(got@11.8.6)':
     dependencies:
       '@aptos-labs/aptos-cli': 1.0.2
@@ -1205,6 +1263,11 @@ snapshots:
       - '@wallet-standard/core'
       - aptos
       - debug
+
+  '@aptos-labs/wallet-standard@0.5.1(@aptos-labs/ts-sdk@2.0.1(got@11.8.6))(@wallet-standard/core@1.1.1)':
+    dependencies:
+      '@aptos-labs/ts-sdk': 2.0.1(got@11.8.6)
+      '@wallet-standard/core': 1.1.1
 
   '@aptos-labs/wallet-standard@0.5.1(@aptos-labs/ts-sdk@4.0.0(got@11.8.6))(@wallet-standard/core@1.1.1)':
     dependencies:
@@ -1450,6 +1513,22 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@lit-labs/react@2.1.3(@types/react@19.1.10)':
+    dependencies:
+      '@lit/react': 1.0.8(@types/react@19.1.10)
+    transitivePeerDependencies:
+      - '@types/react'
+
+  '@lit-labs/ssr-dom-shim@1.4.0': {}
+
+  '@lit/react@1.0.8(@types/react@19.1.10)':
+    dependencies:
+      '@types/react': 19.1.10
+
+  '@lit/reactive-element@2.1.1':
+    dependencies:
+      '@lit-labs/ssr-dom-shim': 1.4.0
+
   '@noble/curves@1.9.6':
     dependencies:
       '@noble/hashes': 1.8.0
@@ -1629,6 +1708,8 @@ snapshots:
     dependencies:
       '@types/node': 24.2.1
 
+  '@types/trusted-types@2.0.7': {}
+
   '@vitejs/plugin-react@5.0.0(vite@7.1.2(@types/node@24.2.1))':
     dependencies:
       '@babel/core': 7.28.0
@@ -1667,6 +1748,20 @@ snapshots:
   '@wallet-standard/wallet@1.1.0':
     dependencies:
       '@wallet-standard/base': 1.1.0
+
+  '@wgb5445/aptos-wallet-connect-kit@0.1.2(@types/react@19.1.10)(@wallet-standard/core@1.1.1)(got@11.8.6)(immer@10.1.1)(use-sync-external-store@1.5.0(react@19.1.1))':
+    dependencies:
+      '@aptos-labs/ts-sdk': 2.0.1(got@11.8.6)
+      '@aptos-labs/wallet-standard': 0.5.1(@aptos-labs/ts-sdk@2.0.1(got@11.8.6))(@wallet-standard/core@1.1.1)
+      lit: 3.3.1
+      react: 19.1.1
+      zustand: 5.0.7(@types/react@19.1.10)(immer@10.1.1)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@wallet-standard/core'
+      - got
+      - immer
+      - use-sync-external-store
 
   aptos@1.21.0:
     dependencies:
@@ -1931,6 +2026,22 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  lit-element@4.2.1:
+    dependencies:
+      '@lit-labs/ssr-dom-shim': 1.4.0
+      '@lit/reactive-element': 2.1.1
+      lit-html: 3.3.1
+
+  lit-html@3.3.1:
+    dependencies:
+      '@types/trusted-types': 2.0.7
+
+  lit@3.3.1:
+    dependencies:
+      '@lit/reactive-element': 2.1.1
+      lit-element: 4.2.1
+      lit-html: 3.3.1
 
   lowercase-keys@2.0.0: {}
 

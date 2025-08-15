@@ -1,4 +1,7 @@
 // 轻量 Aptos 钱包适配器（Petra/Fewcha 等）
+import { EntryFunctionArgumentTypes, SimpleEntryFunctionArgumentTypes } from '@aptos-labs/ts-sdk';
+import { walletAdapter} from '@wgb5445/aptos-wallet-connect-kit';
+import { ScriptFunctionArgumentTypes } from 'node_modules/@aptos-labs/ts-sdk/dist/common';
 
 export type EntryFunctionData = {
   function: string;
@@ -9,7 +12,6 @@ export type EntryFunctionData = {
 declare global {
   interface Window {
     aptos?: {
-      connect: () => Promise<{ address: string } | undefined>;
       disconnect: () => Promise<void>;
       isConnected: () => Promise<boolean>;
       account: () => Promise<{ address: string } | null>;
@@ -19,27 +21,15 @@ declare global {
   }
 }
 
-export async function ensureWallet(): Promise<void> {
-  if (!window.aptos) throw new Error('未检测到 Aptos 钱包（例如 Petra）。请先安装钱包扩展。');
-}
-
-export async function connectWallet(): Promise<string> {
-  await ensureWallet();
-  const res = await window.aptos!.connect();
-  if (!res?.address) throw new Error('钱包连接失败');
-  return res.address;
-}
-
 export async function disconnectWallet(): Promise<void> {
-  if (!window.aptos) return;
-  await window.aptos.disconnect();
+  await walletAdapter.disconnect();
 }
 
 export async function getWalletAccount(): Promise<string | null> {
-  if (!window.aptos) return null;
+  if (!walletAdapter) return null;
   try {
-    const a = await window.aptos.account();
-    return a?.address ?? null;
+    const a = await walletAdapter.getAccount();
+    return a ?? null;
   } catch {
     return null;
   }
@@ -50,17 +40,23 @@ export async function isWalletConnected(): Promise<boolean> {
   try { return await window.aptos.isConnected(); } catch { return false; }
 }
 
-export async function signAndSubmitEntry(fullFunction: string, args: unknown[], typeArgs: string[] = []): Promise<string> {
-  await ensureWallet();
-  // 采用与示例一致的负载结构（entry_function_payload）
-  const payload = {
-    type: 'entry_function_payload',
-    function: fullFunction,
-    type_arguments: typeArgs,
-    arguments: args
-  } as const;
-  const tx = await window.aptos!.signAndSubmitTransaction(payload as any);
-  return tx.hash;
+export async function signAndSubmitEntry(fullFunction: `${string}::${string}::${string}`, args: Array<EntryFunctionArgumentTypes | SimpleEntryFunctionArgumentTypes> | ScriptFunctionArgumentTypes[], typeArgs: string[] = []): Promise<string | undefined> {
+  console.log('Signing and submitting entry:', { fullFunction, args, typeArgs });
+  const tx = await walletAdapter.signAndSubmitTransaction({
+    payload: {
+      typeArguments: typeArgs,
+      function: fullFunction,
+      functionArguments: args as any[]
+    }
+  });
+  if( tx.status == "Approved" ){
+    // 处理成功情况
+    return tx.args['hash'] as string;
+  }else if( tx.status == "Rejected" ){
+    throw new Error('用户拒绝了交易');
+  }
+  // 如果 tx.status 不是 "Approved" 或 "Rejected"，返回 undefined
+  return undefined;
 }
 
 

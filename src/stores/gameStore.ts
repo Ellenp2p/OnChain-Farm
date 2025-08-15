@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { produce } from 'immer';
 import { CROPS } from '@/domain/crops';
-import { GameStateSnapshot, PlotTile, ToolKind } from '@/domain/types';
+import { GameStateSnapshot, InventoryItem, PlotTile, ToolKind } from '@/domain/types';
 import { providers } from '@/data/registry';
 import { cacheGetEntry } from '@/data/providers/simpleCache';
 
@@ -67,6 +67,11 @@ export const useGameStore = create<GameStoreState & GameStoreActions>()(
         try {
           const g = cacheGetEntry<number>('field:gold');
           if (g && (typeof g.value === 'number' || typeof g.value === 'bigint')) set(state=> ({...state, gold: g.value }));
+        } catch {}
+
+        try {
+          const inv = cacheGetEntry<InventoryItem[]>('field:inventory');
+          if (inv) set(state => ({ ...state, inventory: inv.value }));
         } catch {}
       },
       async save() {

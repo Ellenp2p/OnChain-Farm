@@ -2,12 +2,12 @@ module farm_aptos::farm_aptos {
     use std::signer;
     use std::option;
     use std::vector;
-    use std::string;
     use std::bcs;
-    use std::string_utils;
     use aptos_framework::object;
     use aptos_framework::smart_table;
     use aptos_framework::timestamp;
+
+    use farm_aptos::deserializer;
 
     /// 地块上的作物实例
     /// 对应前端 `CropInstance`
@@ -82,7 +82,14 @@ module farm_aptos::farm_aptos {
         extend_ref: object::ExtendRef,
         transfer_ref: object::TransferRef,
     }
-    
+
+    fun init_module(contract: &signer) {
+        // 初始化合约
+        move_to(contract, CropRegistry {
+            crops: smart_table::new(),
+        });
+    }
+
     // 通过地址和前缀获取种子
     public fun get_seed (prefix: vector<u8>): vector<u8> {
         let seed = vector::empty<u8>();
@@ -142,7 +149,7 @@ module farm_aptos::farm_aptos {
         
     }
 
-    inline fun get_farm_ref(owner: address): &mut Farm acquires Farm {
+    inline fun get_farm_ref(owner: address): &mut Farm {
         let farm_object = get_farm_address(owner);
         assert!(farm_object.is_some(), 1);
         &mut Farm[object::object_address(farm_object.borrow())]
@@ -187,7 +194,7 @@ module farm_aptos::farm_aptos {
 
         // 写入地块
         let crop_instance = CropInstance {
-            crop_type_id: crop_type_id,
+            crop_type_id,
             planted_at_sec: timestamp::now_seconds(),
             watered: false,
         };
@@ -262,7 +269,7 @@ module farm_aptos::farm_aptos {
 
         // 查看种子价格
         let crop_registry =  & CropRegistry[@farm_aptos].crops;
-        assert!(crop_registry.contains(crop_type_id));
+        assert!(crop_registry.contains(crop_type_id), 64);
         let crop_type = crop_registry.borrow(crop_type_id);
         match (crop_type){
             CropKind::V1Crop {
@@ -282,7 +289,7 @@ module farm_aptos::farm_aptos {
                     // 新增库存
                     let inventory_item = InventoryItem {
                         kind: InventoryKind::Seed,
-                        crop_type_id: crop_type_id,
+                        crop_type_id,
                         quantity: qty,
                     };
                     farm.inventory.add(crop_type_id, inventory_item);
@@ -351,6 +358,65 @@ module farm_aptos::farm_aptos {
 
     }
 
+
+    #[test]
+    fun main(){
+        use std::from_bcs;
+        std::debug::print(&
+            from_bcs::to_bytes(vector[1, 1])
+        );
+
+    }
+
+    // admin
+    public fun register_crop(sender: &signer, data: vector<u8>): CropKind acquires CropRegistry {
+        assert!(signer::address_of(sender) == @farm_aptos || object::is_owner(
+            object::address_to_object<object::ObjectCore>(@farm_aptos),
+            signer::address_of(sender)
+        ), 0x100);
+
+        let cursor = deserializer::new_cursor(data);
+        let type = cursor.read_uleb128_u32();
+        let crop = if (type == 0){
+            CropKind::V1Crop {
+                id: cursor.read_bytes(),
+                // 作物名称
+                name: cursor.read_bytes(),
+                // 作物描述
+                description: cursor.read_bytes(),
+                // 作物图片
+                image: cursor.read_bytes(),
+                // 成熟时间
+                mature_time: cursor.read_u64(),
+                // 产量
+                yield: cursor.read_u64(),
+                // 种子价格
+                seed_price: cursor.read_u64(),
+                // 作物价格
+                crop_price: cursor.read_u64(),
+            }
+        }else {
+            abort 0
+        };
+        let crop_type = crop.id;
+        CropRegistry[@farm_aptos].crops.add(crop_type, crop);
+        crop
+    }
+
+
+    #[view]
+    public fun get_registry(): std::simple_map::SimpleMap<vector<u8>, CropKind> acquires CropRegistry {
+        let crop_registry = CropRegistry[@farm_aptos].crops.to_simple_map();
+        crop_registry
+    }
+
+    #[view]
+    public fun get_registry_crop(id: vector<u8>): option::Option<CropKind> acquires CropRegistry {
+        if(CropRegistry[@farm_aptos].crops.contains(id)){
+            return option::some(*CropRegistry[@farm_aptos].crops.borrow(id));
+        }else {
+            return option::none();
+        };
+        abort 0
+    }
 }
-
-

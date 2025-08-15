@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = []
 
 [addresses]
-farm_aptos = "_"
+farm_aptos = "0x40ef69f6ad90a6ab022a14e2f3b7c5f91c03f76f5eb3716910569b12f7da3ea5"
 
 [dev-addresses]
 farm_aptos = "0xe252f7828ceaf860ed74ddce1693f0e7f8ba9abd8858bb2971423b20ba84e338"

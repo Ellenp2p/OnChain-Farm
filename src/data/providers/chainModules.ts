@@ -2,18 +2,16 @@ import type { FieldProvider } from '@/data/modules/field';
 import type { MarketProvider } from '@/data/modules/market';
 import type { FriendsProvider } from '@/data/modules/friends';
 import { getChainConfig } from '@/data/providers/chainConfig';
-import type { PlotTile, GameStateSnapshot } from '@/domain/types';
-import { cacheGetOrSetAsync, cacheSet, cacheDel, cacheGetEntry, cacheSetWithTs } from '@/data/providers/simpleCache';
+import type { PlotTile, GameStateSnapshot, InventoryItem } from '@/domain/types';
+import { cacheSet, cacheDel, cacheGetEntry, cacheSetWithTs } from '@/data/providers/simpleCache';
 import { signAndSubmitEntry } from '@/data/providers/wallet';
 import { viewGetMyFarm } from '@/data/providers/aptosView';
-import { AccountAddress, Bool, Deserializer, MoveOption, MoveVector, Serializable, Serializer, TransactionArgument, U64, U8 } from '@aptos-labs/ts-sdk';
+import { Deserializer, Serializable, Serializer, TransactionArgument, U64, U8 } from '@aptos-labs/ts-sdk';
 import { Buffer } from 'buffer';
+import { ca } from 'node_modules/@aptos-labs/ts-sdk/dist/esm/account--Q9z_xMN.mjs';
 
-function encodeCropTypeIdBytesHex(cropTypeId: string): string {
-  // ABI: vector<u8>，这里使用 UTF-8 编码并返回 0x 前缀十六进制
-  const bytes = new TextEncoder().encode(cropTypeId);
-  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-  return `0x${hex}`;
+function encodeCropTypeIdBytesHex(cropTypeId: string): Uint8Array {
+  return Buffer.from(cropTypeId, "utf8")
 }
 
 // Use shared simpleCache utilities for caching across modules
@@ -32,7 +30,7 @@ async function submitEntry(functionName: string, args: unknown[]): Promise<strin
   const cfg = getChainConfig();
   const fullFn = `${cfg.packageAddress}::${cfg.moduleName}::${functionName}`;
   try {
-    const hash = await signAndSubmitEntry(fullFn, args, []);
+    const hash = await signAndSubmitEntry(fullFn as `${string}::${string}::${string}`, args as any, []);
     return hash ?? null;
   } catch (e) {
     console.warn('[chain] 提交失败，将不阻断前端状态。原因: ', e);
@@ -180,7 +178,26 @@ export const chainFieldProvider: FieldProvider = {
 
           let inv_len = des.deserializeUleb128AsU32()
 
-          
+          let seeds: InventoryItem[] = [];
+          for (let i = 0; i < inv_len; i++) {
+            let key = des.deserializeBytes();
+            // type == 0 代表种子
+            // type == 1 代表作物
+
+            let type = des.deserializeUleb128AsU32();
+
+            let crop_type_id = des.deserializeBytes();
+            let quantity = des.deserializeU64();
+            seeds.push(
+              {
+                id: Buffer.from(key).toString("utf8"),
+                kind: type === 0 ? "seed" : "produce",
+                cropTypeId: Buffer.from(crop_type_id).toString("utf8"),
+                quantity: Number(quantity.toString())
+              }
+            )
+          }
+          cacheSet('field:inventory', seeds);
 
           if (Array.isArray(inner) && inner.length === 0) needInit = true;
         }
@@ -192,6 +209,7 @@ export const chainFieldProvider: FieldProvider = {
         console.log('farm', result);
       }
     } catch (e) {
+      console.error('[chain] view 调用失败: ', e);  
       // view 失败（可能未初始化或未连接钱包），若已连接钱包则提示初始化
       try {
         const { useUiStore } = await import('@/stores/uiStore');

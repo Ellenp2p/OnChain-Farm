@@ -9,6 +9,7 @@ export interface CropType {
   growthSeconds: number;
   seedBuyPrice: number;
   produceSellPrice: number;
+  yield: number;
 }
 
 export interface CropInstance {
