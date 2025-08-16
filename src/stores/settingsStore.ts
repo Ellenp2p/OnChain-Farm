@@ -14,7 +14,7 @@ export interface SettingsActions {
 export const useSettingsStore = create<SettingsState & SettingsActions>()(
 	persist(
 		(set) => ({
-			rpcUrl: '',
+			rpcUrl: 'https://fullnode.mainnet.aptoslabs.com',
 			apiKey: '',
 			setRpcUrl(rpcUrl) { set({ rpcUrl }); },
 			setApiKey(apiKey) { set({ apiKey }); }
