@@ -1,7 +1,7 @@
 // 轻量 Aptos 钱包适配器（Petra/Fewcha 等）
 import { EntryFunctionArgumentTypes, SimpleEntryFunctionArgumentTypes } from '@aptos-labs/ts-sdk';
 import { create } from 'zustand';
-import {AptosConnectFeature, AptosConnectMethod, AptosConnectNamespace, AptosSignAndSubmitTransactionFeature, AptosSignAndSubmitTransactionNamespace, getAptosWallets} from "@aptos-labs/wallet-standard";
+import {AptosConnectFeature, AptosConnectMethod, AptosConnectNamespace, AptosDisconnectFeature, AptosDisconnectNamespace, AptosSignAndSubmitTransactionFeature, AptosSignAndSubmitTransactionNamespace, getAptosWallets} from "@aptos-labs/wallet-standard";
 
 export interface WalletAdaptorState {
   installed_wallets: readonly Wallet[];
@@ -148,6 +148,9 @@ on("register", (wallet: Wallet) => {
 
 
 export async function disconnectWallet(): Promise<void> {
+  const wallet = getWalletAdaptorStore().wallet;
+  if (!wallet) throw new Error('No wallet connected');
+  await (wallet.features as AptosDisconnectFeature)[AptosDisconnectNamespace].disconnect();
   setWalletAdaptorStore((state) => ({ ...state, wallet: undefined, address: undefined, publicKey: undefined }));
 }
 
