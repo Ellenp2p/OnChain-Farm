@@ -39,6 +39,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "pnpm"
 
+      - name: Check required env variables
+        run: |
+          for var in VITE_FARM_PACKAGE_ADDR VITE_PROVIDER_FIELD VITE_PROVIDER_MARKET VITE_PROVIDER_FRIENDS; do
+            if [ -z "${!var}" ]; then
+              echo "❌ Environment variable $var is not set!"
+              exit 1
+            fi
+          done
       - name: Install dependencies
         run: pnpm install
 
