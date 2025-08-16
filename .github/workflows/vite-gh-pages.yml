@@ -4,6 +4,12 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+env:
+  # Setting an environment variable with the value of a configuration variable
+  VITE_FARM_PACKAGE_ADDR: ${{ vars.VITE_FARM_PACKAGE_ADDR }}
+  VITE_PROVIDER_FIELD: ${{ vars.VITE_PROVIDER_FIELD }}
+  VITE_PROVIDER_MARKET: ${{ vars.VITE_PROVIDER_MARKET }}
+  VITE_PROVIDER_FRIENDS: ${{ vars.VITE_PROVIDER_FRIENDS }}
 
 permissions:
   contents: read
@@ -35,7 +41,8 @@ jobs:
 
       - name: Check required env variables
         run: |
-          for var in VITE_FARM_PACKAGE_ADDR VITE_PROVIDER_FIELD VITE_PROVIDER_MARKET VITE_PROVIDER_FRIENDS; do
+          for var in VITE_PROVIDER_FIELD VITE_PROVIDER_MARKET VITE_PROVIDER_FRIENDS VITE_FARM_PACKAGE_ADDR; do
+            echo "$var = '${!var}'"
             if [ -z "${!var}" ]; then
               echo "❌ Environment variable $var is not set!"
               exit 1
