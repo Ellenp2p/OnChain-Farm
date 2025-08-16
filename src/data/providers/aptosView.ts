@@ -14,7 +14,7 @@ export function buildFullFunction(functionName: string): string {
 
 function getViewEndpoint(): string {
   const { rpcUrl } = getChainConfig();
-  const base = (rpcUrl && rpcUrl.trim().length > 0) ? rpcUrl : 'https://api.testnet.aptoslabs.com';
+  const base = (rpcUrl && rpcUrl.trim().length > 0) ? rpcUrl : 'https://fullnode.mainnet.aptoslabs.com';
   return `${base.replace(/\/$/, '')}/v1/view`;
 }
 
