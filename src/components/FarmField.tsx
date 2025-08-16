@@ -87,8 +87,8 @@ function PlotDetails() {
   const pct = crop ? Math.floor(growthProgress(crop.plantedAt, crop.cropTypeId) * 100) : 0;
   const ready = crop ? isGrown(crop.plantedAt, crop.cropTypeId) : false;
   let leftSec = 0;
-  if (crop) {
-    const needed = c!.growthSeconds * 1000;
+  if (crop && c && typeof c.growthSeconds === 'number') {
+    const needed = c.growthSeconds * 1000;
     const left = BigInt(needed) - (BigInt(Date.now()) - crop.plantedAt);
     const leftMs = left > 0n ? left : 0n;
     // safe to convert because leftMs is bounded by needed which is a small number

@@ -37,6 +37,7 @@ export const useUiStore = create<UiState & UiActions>((set, get) => {
       useGameStore.getState().load();
     }
   });
+  
   return {
     toasts: [],
     selectedPlotId: null,
@@ -61,10 +62,12 @@ export const useUiStore = create<UiState & UiActions>((set, get) => {
     async connect() {
       await connectWallet("Petra");
       set({ walletAddress: await getWalletAccount(), walletConnected: true });
+      localStorage.setItem('walletAutoConnect', '1');
     },
     async disconnect() {
       await disconnectWallet();
       set({ walletAddress: null, walletConnected: false });
+      localStorage.removeItem('walletAutoConnect');
     },
     async refreshWallet() {
       const connected = await isWalletConnected();

@@ -7,21 +7,41 @@ import { useGameStore } from '@/stores/gameStore';
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useUiStore } from '@/stores/uiStore';
-import { connectWallet } from '@/data/providers/wallet';
+  import { useState } from 'react';
 
 export function App() {
   const { gold, load } = useGameStore();
   const { walletConnected, walletAddress, connect, disconnect, refreshWallet, initPromptOpen, openInitPrompt, closeInitPrompt, initPending, initFarm } = useUiStore();
-  useEffect(() => { void refreshWallet(); void load(); }, [load]);
 
+  const [countdown, setCountdown] = useState(4);
+  useEffect(() => {
+    void refreshWallet();
+    void load();
+  }, [load]);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === 1) {
+          void load();
+          return 2;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [load]);
   
   return (
     <div className="layout">
+      
       <Toaster />
       <div className="topbar">
         <strong>Farm Aptos</strong>
         <span className="muted">Alpha</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <div style={{ background: '#fff', borderRadius: 8, padding: '4px 12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)'}}>
+            刷新倒计时：{countdown}s
+          </div>
           <Link className="btn" to="/friends">好友列表</Link>
           <Link className="btn" to="/settings">设置</Link>
           <div>💰 {gold}</div>

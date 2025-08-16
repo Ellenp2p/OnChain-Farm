@@ -8,7 +8,6 @@ import { signAndSubmitEntry } from '@/data/providers/wallet';
 import { viewGetMyFarm } from '@/data/providers/aptosView';
 import { Deserializer, Serializable, Serializer, TransactionArgument, U8 } from '@aptos-labs/ts-sdk';
 import { Buffer } from 'buffer';
-import { produce } from 'immer';
 
 function encodeCropTypeIdBytesHex(cropTypeId: string): Uint8Array {
   return Buffer.from(cropTypeId, "utf8")
