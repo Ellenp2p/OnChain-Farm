@@ -21,7 +21,9 @@ const router = createBrowserRouter([
   { path: '/friends', element: <FriendsList /> },
   { path: '/friend/:id', element: <FriendFarm /> },
   { path: '/settings', element: <Settings /> }
-]);
+], {
+  basename: '/OnChain-Farm'
+});
 
 function inferNetworkFromRpc(rpcUrl: string | undefined): Network {
   const url = (rpcUrl || '').toLowerCase();
@@ -52,7 +54,7 @@ function WalletAdapterRoot() {
         console.log('wallet adapter error', error);
       }}
     >
-      <RouterProvider router={router} />
+      <RouterProvider  router={router} />
     </AptosWalletAdapterProvider>
   );
 }
