@@ -32,7 +32,7 @@ async function submitEntry(functionName: string, args: unknown[]): Promise<strin
     return hash ?? null;
   } catch (e) {
     console.warn('[chain] 提交失败，将不阻断前端状态。原因: ', e);
-    return null;
+    throw new Error(`提交失败: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
 
@@ -238,7 +238,11 @@ export const chainFieldProvider: FieldProvider = {
   async plant(plotId, cropTypeId) {
     const { x, y } = parsePlotId(plotId);
     const cropBytes = encodeCropTypeIdBytesHex(cropTypeId);
-    await submitEntry('plant', [x, y, cropBytes]);
+    try{
+      await submitEntry('plant', [x, y, cropBytes]);
+    }catch(e){
+      throw new Error(`提交失败: ${e instanceof Error ? e.message : String(e)}`);
+    }
     const newPlot = { id: plotId, crop: { cropTypeId, plantedAt: BigInt(Date.now()), watered: false } } as PlotTile;
     // update cache if present
     const f = cacheGetEntry<PlotTile[][]>('field:plots');

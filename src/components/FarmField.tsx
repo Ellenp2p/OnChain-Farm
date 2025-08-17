@@ -33,7 +33,7 @@ export function FarmField() {
             ? `${c?.emoji} ${pct}%${crop.watered ? ' 💧' : ''}${ready ? ' ✅' : ''}`
             : '空地';
 
-          const onClick = () => {
+          const onClick = async () => {
             if (selectedTool === 'hand') {
               selectPlot(plot.id);
               return;
@@ -43,7 +43,7 @@ export function FarmField() {
               if (a.reason) push(a.reason, 'info');
               return;
             }
-            interactPlot(plot.id);
+            await interactPlot(plot.id);
             selectPlot(plot.id);
             if (selectedTool === 'plant') push(`${c?.displayName ?? selectedSeed} 已种下`, 'success');
             if (selectedTool === 'water') push('已浇水', 'success');

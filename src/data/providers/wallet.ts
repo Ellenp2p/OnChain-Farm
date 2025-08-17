@@ -198,7 +198,7 @@ export async function isWalletConnected(): Promise<boolean> {
   }
 }
 
-export async function signAndSubmitEntry(fullFunction: `${string}::${string}::${string}`, args: Array<EntryFunctionArgumentTypes | SimpleEntryFunctionArgumentTypes> , typeArgs: string[] = []): Promise<string | undefined> {
+export async function signAndSubmitEntry(fullFunction: `${string}::${string}::${string}`, args: Array<EntryFunctionArgumentTypes | SimpleEntryFunctionArgumentTypes> , typeArgs: string[] = []): Promise<string> {
   console.log('Signing and submitting entry:', { fullFunction, args, typeArgs });
   const tx = await (getWalletAdaptorStore().wallet?.features as AptosSignAndSubmitTransactionFeature)[AptosSignAndSubmitTransactionNamespace].signAndSubmitTransaction({
     payload: {
@@ -208,13 +208,12 @@ export async function signAndSubmitEntry(fullFunction: `${string}::${string}::${
     }
   });
   if( tx.status == "Approved" ){
-    // 处理成功情况
     return tx.args['hash'] as string;
   }else if( tx.status == "Rejected" ){
     throw new Error('用户拒绝了交易');
+  }else {
+    throw new Error('交易失败');
   }
-  // 如果 tx.status 不是 "Approved" 或 "Rejected"，返回 undefined
-  return undefined;
 }
 
 
