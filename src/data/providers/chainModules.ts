@@ -162,7 +162,7 @@ export const chainFieldProvider: FieldProvider = {
               v.map((p) => {
                 return {
                   // x-y
-                  id: `${index}-${p.id}`,
+                  id: `${index}-${p.id.toString()}`,
                   crop: p.crop
                     ? {
                         cropTypeId: Buffer.from(p.crop.crop_type_id).toString(),

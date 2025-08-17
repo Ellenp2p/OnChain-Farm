@@ -163,10 +163,12 @@ module farm_aptos::farm_aptos {
     }
 
     /// 播种：在指定地块种下指定作物
-    public entry fun plant(owner: &signer, x: u64, y: u64, crop_type_id: vector<u8>) acquires Farm {
+    public entry fun plant(owner: &signer, x: u64, plot_id: u64, crop_type_id: vector<u8>) acquires Farm {
         // TODO: 校验库存并写入作物实例
         let farm = get_farm_ref(signer::address_of(owner));
-        let plot_tile = &mut farm.plots[x][y];
+        // plot_id 代表当前地块是第几块
+        let len = farm.plots.length();
+        let plot_tile = &mut farm.plots[plot_id / len][plot_id % len];
         assert!(plot_tile.crop.is_none(), 2);
 
         // 检查作物种子是否存在
